@@ -1,12 +1,54 @@
-# GramFund — Ledger-First, Offline-Capable Financial Platform
+# GramFund = “Digital accounting system for community-based financial support”
 
 [![Status](https://img.shields.io/badge/status-scaffold-blue)](#)
 [![Node](https://img.shields.io/badge/node-20%2B-339933)](#)
 [![TypeScript](https://img.shields.io/badge/typescript-enabled-3178C6)](#)
 
-A production-oriented monorepo scaffold for building **financially-correct payment workflows** with **offline-first client experiences**.
+## 💰 GramFund
 
-> Ideal for showcasing on GitHub and LinkedIn as a systems-design-heavy, full-stack architecture project.
+GramFund is a **community-based financial contribution and settlement system** built for rural and semi-urban environments where families support each other during important life events.
+
+Traditionally, these contributions are tracked manually or remembered over time, often leading to confusion, disputes, or loss of trust. GramFund solves this by introducing a **digital ledger system** that records every transaction and maintains long-term financial relationships between families.
+
+---
+
+## 🚀 Key Features
+
+* 🧾 **Ledger-Based System**
+  Automatically tracks total given, received, and net balance per family
+
+* 🎉 **Event-Based Contributions**
+  Manage contributions for weddings, ceremonies, and other events
+
+* 👨‍👩‍👧‍👦 **Family-Centric Design**
+  Families act as financial entities independent of app users
+
+* 👨‍🔧 **Handler Workflow**
+  Field operators collect and record payments (cash/online)
+
+* 🔐 **Secure & Reliable**
+  OTP-based authentication, role-based + attribute-based access control
+
+* 🔁 **Idempotent Transactions**
+  Prevent duplicate entries and ensure financial accuracy
+
+* 🔔 **Smart Notifications**
+  Multi-channel alerts (SMS, push, manual fallback)
+
+---
+
+## 🧠 Core Concept
+
+> GramFund is not a payment app—it is a **financial memory system**.
+
+Every contribution is recorded as a transaction, and all balances are derived from a **double-entry ledger**, ensuring long-term consistency and trust.
+
+---
+
+## 🎯 Goal
+
+To digitize community-based financial systems and create a **transparent, scalable, and trustworthy ecosystem** for mutual support.
+
 
 ---
 
