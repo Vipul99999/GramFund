@@ -1,0 +1,405 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+enum Role { ADMIN HANDLER USER }
+enum EventStatus { DRAFT ACTIVE COMPLETED ARCHIVED CANCELLED }
+enum PaymentMode { CASH ONLINE }
+enum PaymentStatus { INITIATED SUCCESS FAILED }
+enum PaymentProvider { PAYTM UPI CASH OTHER }
+enum PaymentFailureReason { INSUFFICIENT_FUNDS NETWORK_ERROR INVALID_DETAILS OTHER }
+enum paymentStatus { PENDING PAID OVERDUE EXEMPTED }
+enum TransactionStatus { INITIATED CONFIRMED FAILED REVERSED }
+enum LedgerEntryType { TRANSFER_IN TRANSFER_OUT ADJUSTMENT REVERSAL }
+enum NotificationStatus { PENDING SENT FAILED NEEDS_MANUAL }
+enum ApprovalStatus { PENDING APPROVED REJECTED }
+enum ResetType { password pin }
+enum OTPPurpose { LOGIN PASSWORD_RESET PIN_RESET EMAIL_VERIFY PHONE_VERIFY }
+enum SettlementStatus { PENDING CALCULATED PAID DISPUTED CANCELLED }
+enum AddressType { VILLAGE FAMILY_HOME HANDLER_OFFICE EVENT_VENUE }
+enum PINStatus { NOT_SET ACTIVE DISABLED LOCKED }
+enum CommissionStatus { PENDING COLLECTED WAIVED }
+
+model Address {
+  id        String   @id @default(uuid())
+  name      String
+  pincode   String   @db.Char(6)
+  district  String
+  city      String
+  state     String
+  type      AddressType @default(VILLAGE)
+  isActive  Boolean  @default(true)
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  handlers Handler[]
+  families Family[]
+  events   Event[]
+  payments Payment[]
+
+  @@index([pincode])
+  @@index([state, district])
+  @@unique([district, name, pincode])
+  @@index([createdAt])
+}
+
+model User {
+  id              String   @id @default(uuid())
+  phone           String   @unique
+  email           String?  @unique
+  passwordHash    String
+  pinHash         String?
+  isPinEnabled    Boolean  @default(false)
+  pinStatus       PINStatus @default(NOT_SET)
+  isEmailVerified Boolean  @default(false)
+  isPhoneVerified Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  role            Role     @default(USER)
+  addressId       String?
+  address         Address? @relation(fields: [addressId], references: [id])
+  lastLoginAt     DateTime?
+  lastPinUsedAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String?
+  createdBy       User?    @relation("UserCreator", fields: [createdById], references: [id])
+  createdUsers    User[]   @relation("UserCreator")
+  failedAttempts  Int      @default(0)
+  pinAttempts     Int      @default(0)
+  lockUntil       DateTime?
+  pinLockUntil    DateTime?
+
+  handler         Handler?
+  family          Family?
+  sessions        UserSession[]
+  auditLogs       AuditLog[]
+  oauthAccounts   OAuthAccount[]
+  passwordResets  PasswordReset[]
+  createdEvents   Event[] @relation("EventCreator")
+  createdTransactions Transaction[] @relation("TransactionCreator")
+  raisedDisputes  Dispute[] @relation("DisputeRaiser")
+  resolvedDisputes Dispute[] @relation("DisputeResolver")
+  approvalsRequested ApprovalRequest[] @relation("ApprovalRequester")
+  approvalsReviewed  ApprovalRequest[] @relation("ApprovalApprover")
+
+  @@index([phone])
+  @@index([email])
+  @@index([role])
+  @@index([createdById])
+  @@index([lockUntil, pinLockUntil])
+  @@index([addressId])
+}
+
+model UserSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken    String   @unique
+  accessTokenHash String?
+  ipAddress       String?
+  userAgent       String?
+  deviceId        String?
+  deviceName      String?
+  isActive        Boolean  @default(true)
+  replacedBy      String?
+  lastActiveAt    DateTime @default(now())
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isActive])
+  @@index([refreshToken])
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  type      ResetType
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model OTP {
+  id          String   @id @default(uuid())
+  phone       String
+  codeHash    String
+  purpose     OTPPurpose
+  metadata    Json?
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([phone, purpose, expiresAt])
+  @@index([expiresAt])
+}
+
+model OAuthAccount {
+  id             String   @id @default(uuid())
+  userId         String
+  provider       String
+  providerId     String
+  email          String?
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  scopes         String[]
+  profileData    Json?
+  lastUsedAt     DateTime?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@unique([userId, provider])
+  @@index([provider, providerId])
+  @@index([email])
+}
+
+model Handler {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  addressId       String
+  address         Address  @relation(fields: [addressId], references: [id])
+  commissionFixed Decimal  @db.Decimal(6, 2) @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+  families        Family[]
+  payments        Payment[]
+  settlements     EventSettlement[]
+
+  @@index([addressId])
+  @@index([isActive])
+}
+
+model Family {
+  id            String   @id @default(uuid())
+  headName      String
+  phoneNumber   String?  @unique
+  userId        String?  @unique
+  user          User?    @relation(fields: [userId], references: [id])
+  handlerId     String
+  handler       Handler  @relation(fields: [handlerId], references: [id])
+  addressId     String
+  address       Address  @relation(fields: [addressId], references: [id])
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  creator       User?    @relation("FamilyCreator", fields: [createdById], references: [id])
+  createdById   String?
+  sentTx        Transaction[] @relation("fromFamily")
+  receivedTx    Transaction[] @relation("toFamily")
+  ledgerEntries LedgerEntry[]
+  notifications Notification[]
+  participants  EventParticipant[]
+
+  @@index([addressId])
+  @@index([handlerId])
+  @@index([isActive])
+}
+
+model Event {
+  id                   String   @id @default(uuid())
+  addressId            String
+  address              Address  @relation(fields: [addressId], references: [id])
+  title                String
+  expectedContribution Decimal  @db.Decimal(12, 2)
+  eventDate            DateTime
+  status               EventStatus
+  createdBy            String
+  createdAt            DateTime @default(now())
+  creator              User     @relation("EventCreator", fields: [createdBy], references: [id])
+  participants         EventParticipant[]
+  transactions         Transaction[]
+  notifications        Notification[]
+  payments             Payment[]
+  settlements          EventSettlement[]
+
+  @@index([addressId])
+  @@index([status])
+}
+
+model EventParticipant {
+  id            String   @id @default(uuid())
+  eventId       String
+  familyId      String
+  expectedAmount Decimal @db.Decimal(12, 2)
+  paidAmount    Decimal  @default(0) @db.Decimal(12, 2)
+  event         Event    @relation(fields: [eventId], references: [id])
+  family        Family   @relation(fields: [familyId], references: [id])
+  paymentStatus paymentStatus @default(PENDING)
+  paidAt        DateTime?
+
+  @@unique([eventId, familyId])
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  addressId     String
+  amount        Decimal  @db.Decimal(12, 2)
+  mode          PaymentMode
+  status        PaymentStatus
+  eventId       String?
+  event         Event?   @relation(fields: [eventId], references: [id])
+  handlerId     String?
+  proofImageUrl String?
+  proofMetadata Json?
+  failureReason String?
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  address       Address  @relation(fields: [addressId], references: [id])
+  handler       Handler? @relation(fields: [handlerId], references: [id])
+  transactions  Transaction[]
+
+  @@index([addressId])
+  @@index([status])
+  @@index([mode])
+}
+
+model Transaction {
+  id             String   @id @default(uuid())
+  fromFamilyId   String
+  toFamilyId     String
+  amount         Decimal  @db.Decimal(12, 2)
+  status         TransactionStatus
+  eventId        String?
+  paymentId      String?
+  idempotencyKey String   @unique
+  createdBy      String
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+  fromFamily     Family   @relation("fromFamily", fields: [fromFamilyId], references: [id])
+  toFamily       Family   @relation("toFamily", fields: [toFamilyId], references: [id])
+  event          Event?   @relation(fields: [eventId], references: [id])
+  payment        Payment? @relation(fields: [paymentId], references: [id])
+  creator        User     @relation("TransactionCreator", fields: [createdBy], references: [id])
+  ledgerEntries  LedgerEntry[]
+  disputes       Dispute[]
+
+  @@index([fromFamilyId, createdAt])
+  @@index([toFamilyId, createdAt])
+  @@index([status])
+}
+
+model LedgerEntry {
+  id              String   @id @default(uuid())
+  transactionId   String
+  entryGroupId    String
+  familyId        String
+  fromFamilyId    String
+  toFamilyId      String
+  type            LedgerEntryType
+  amount          Decimal  @db.Decimal(12, 2)
+  currency        String   @default("INR")
+  postedAt        DateTime @default(now())
+  postedBy        String?
+  settlementId    String?
+  transaction     Transaction @relation(fields: [transactionId], references: [id])
+  family          Family      @relation(fields: [familyId], references: [id])
+  poster          User?       @relation(fields: [postedBy], references: [id])
+  settlement      EventSettlement? @relation(fields: [settlementId], references: [id])
+
+  @@index([familyId, postedAt])
+  @@index([transactionId])
+  @@index([entryGroupId])
+}
+
+model Notification {
+  id              String   @id @default(uuid())
+  familyId        String
+  eventId         String?
+  type            String
+  channel         String   @default("SMS")
+  status          NotificationStatus
+  retryCount      Int      @default(0)
+  manualConfirmed Boolean  @default(false)
+  payload         Json?
+  createdAt       DateTime @default(now())
+  sentAt          DateTime?
+  archivedAt      DateTime?
+  family          Family   @relation(fields: [familyId], references: [id])
+  event           Event?   @relation(fields: [eventId], references: [id])
+
+  @@index([familyId, status])
+}
+
+model Dispute {
+  id            String   @id @default(uuid())
+  transactionId String
+  reason        String
+  status        String   @default("OPEN")
+  raisedBy      String?
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  raiser        User?       @relation("DisputeRaiser", fields: [raisedBy], references: [id])
+  resolver      User?       @relation("DisputeResolver", fields: [resolvedBy], references: [id])
+
+  @@index([transactionId])
+  @@index([status])
+}
+
+model ApprovalRequest {
+  id          String   @id @default(uuid())
+  type        String
+  payload     Json
+  status      ApprovalStatus
+  requestedBy String
+  approvedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  requester   User     @relation("ApprovalRequester", fields: [requestedBy], references: [id])
+  approver    User?    @relation("ApprovalApprover", fields: [approvedBy], references: [id])
+
+  @@index([status])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  entity      String
+  entityId    String
+  action      String
+  data        Json?
+  ipAddress   String?
+  userAgent   String?
+  performedBy String?
+  createdAt   DateTime @default(now())
+  performer   User?    @relation(fields: [performedBy], references: [id])
+
+  @@index([entity, entityId])
+  @@index([performedBy, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}
+
+model EventSettlement {
+  id                String   @id @default(uuid())
+  eventId           String
+  handlerId         String
+  totalCollected    Decimal  @db.Decimal(12, 2)
+  handlerCommission Decimal  @db.Decimal(8, 2)
+  netPayout         Decimal  @db.Decimal(12, 2)
+  status            SettlementStatus @default(PENDING)
+  payoutProofUrl    String?
+  payoutDate        DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+  event             Event    @relation(fields: [eventId], references: [id])
+  handler           Handler  @relation(fields: [handlerId], references: [id])
+  ledgerEntries     LedgerEntry[]
+
+  @@unique([eventId, handlerId])
+  @@index([eventId])
+  @@index([handlerId, status])
+}
