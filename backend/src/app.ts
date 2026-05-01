@@ -17,6 +17,7 @@ import handlerModule from './modules/handler/handler.plugin.js';
 import settlementModule from './modules/settlement/settlement.plugin.js';
 import disputeModule from './modules/dispute/dispute.plugin.js';
 import reportModule from './modules/report/report.plugin.js';
+import notificationModule from './modules/notification/notification.plugin.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { registerErrorHandler } from './middleware/error.middleware.js';
@@ -61,6 +62,7 @@ export const buildApp = () => {
     api.register(settlementModule);
     api.register(disputeModule);
     api.register(reportModule);
+    api.register(notificationModule);
     api.register(manifestRoutes);
     api.register(syncRoutes);
     api.register(opsRoutes);

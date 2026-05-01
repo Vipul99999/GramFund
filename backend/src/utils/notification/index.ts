@@ -1,2 +1,7 @@
-export const buildNotificationMessage = (event: string, amount: number) => `${event}: contribution recorded for ₹${amount}`;
-export const selectChannel = (priority: 'CRITICAL' | 'IMPORTANT' | 'LOW') => priority === 'CRITICAL' ? 'SMS' : priority === 'IMPORTANT' ? 'PUSH' : 'IN_APP';
+import { NotificationPriority } from '../../jobs/contracts.js';
+
+export const selectChannel = (priority: NotificationPriority) => {
+  if (priority === 'LOW') return 'IN_APP';
+  if (priority === 'IMPORTANT') return 'PUSH';
+  return 'PUSH';
+};

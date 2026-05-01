@@ -328,8 +328,25 @@ model Notification {
   archivedAt      DateTime?
   family          Family   @relation(fields: [familyId], references: [id])
   event           Event?   @relation(fields: [eventId], references: [id])
+  deliveries      NotificationDelivery[]
 
   @@index([familyId, status])
+}
+
+
+
+model NotificationDelivery {
+  id             String   @id @default(uuid())
+  notificationId String
+  channel        String
+  status         String
+  retryCount     Int      @default(0)
+  error          String?
+  createdAt      DateTime @default(now())
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId, channel])
+  @@index([status])
 }
 
 model Dispute {
