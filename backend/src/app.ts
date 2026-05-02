@@ -17,7 +17,6 @@ import handlerModule from './modules/handler/handler.plugin.js';
 import settlementModule from './modules/settlement/settlement.plugin.js';
 import disputeModule from './modules/dispute/dispute.plugin.js';
 import reportModule from './modules/report/report.plugin.js';
-import notificationModule from './modules/notification/notification.plugin.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { registerErrorHandler } from './middleware/error.middleware.js';
@@ -29,6 +28,8 @@ import transactionRoutes from './modules/transaction/http/transaction.routes.js'
 import manifestRoutes from './api/manifest.routes.js';
 import syncRoutes from './modules/sync/sync.routes.js';
 import opsRoutes from './modules/ops/ops.routes.js';
+import policyRoutes from './modules/policy/policy.routes.js';
+import complianceRoutes from './modules/compliance/compliance.routes.js';
 
 export const buildApp = () => {
   const app = Fastify({ logger: { level: 'info' } });
@@ -49,9 +50,6 @@ export const buildApp = () => {
   app.addHook('preHandler', auditMiddleware);
 
   app.get('/health', async () => ({ name: APP_NAME, status: 'ok' }));
-  app.post('/api/v1/transactions', { preHandler: [idempotencyMiddleware, fraudMiddleware, abacMiddleware('transaction.create')] }, async () => ({ ok: true }));
-  app.post('/api/v1/payments', { preHandler: [idempotencyMiddleware, fraudMiddleware, abacMiddleware('payment.create')] }, async () => ({ ok: true }));
-
   app.register(async (api) => {
     api.register(authModule);
     api.register(familyModule);
@@ -62,10 +60,11 @@ export const buildApp = () => {
     api.register(settlementModule);
     api.register(disputeModule);
     api.register(reportModule);
-    api.register(notificationModule);
     api.register(manifestRoutes);
     api.register(syncRoutes);
     api.register(opsRoutes);
+    api.register(policyRoutes);
+    api.register(complianceRoutes);
   }, { prefix: API_PREFIX });
 
   registerErrorHandler(app);

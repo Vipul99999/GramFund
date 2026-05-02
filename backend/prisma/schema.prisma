@@ -214,6 +214,8 @@ model Event {
   title                String
   expectedContribution Decimal  @db.Decimal(12, 2)
   eventDate            DateTime
+  eventStartDate       DateTime?
+  eventEndDate         DateTime?
   status               EventStatus
   createdBy            String
   createdAt            DateTime @default(now())
@@ -255,6 +257,7 @@ model Payment {
   proofMetadata Json?
   failureReason String?
   createdAt     DateTime @default(now())
+  actualPaymentDate DateTime?
   completedAt   DateTime?
   address       Address  @relation(fields: [addressId], references: [id])
   handler       Handler? @relation(fields: [handlerId], references: [id])
@@ -328,25 +331,8 @@ model Notification {
   archivedAt      DateTime?
   family          Family   @relation(fields: [familyId], references: [id])
   event           Event?   @relation(fields: [eventId], references: [id])
-  deliveries      NotificationDelivery[]
 
   @@index([familyId, status])
-}
-
-
-
-model NotificationDelivery {
-  id             String   @id @default(uuid())
-  notificationId String
-  channel        String
-  status         String
-  retryCount     Int      @default(0)
-  error          String?
-  createdAt      DateTime @default(now())
-  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-
-  @@index([notificationId, channel])
-  @@index([status])
 }
 
 model Dispute {
@@ -419,4 +405,34 @@ model EventSettlement {
   @@unique([eventId, handlerId])
   @@index([eventId])
   @@index([handlerId, status])
+}
+
+
+model FamilySplitMerge {
+  id              String   @id @default(uuid())
+  sourceFamilyId  String
+  targetFamilyId  String
+  eventId         String?
+  reason          String?
+  createdAt       DateTime @default(now())
+}
+
+model OverpaymentCredit {
+  id         String   @id @default(uuid())
+  familyId   String
+  eventId    String?
+  amount     Decimal  @db.Decimal(12, 2)
+  consumed   Decimal  @default(0) @db.Decimal(12, 2)
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+model ReminderTask {
+  id          String   @id @default(uuid())
+  familyId    String
+  eventId     String?
+  reason      String
+  dueAt       DateTime
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
 }

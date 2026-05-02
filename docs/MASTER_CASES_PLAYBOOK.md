@@ -46,15 +46,15 @@ flowchart TD
 | Ledger correctness | Double-entry mismatch | invariant rejection | ✅ |
 | Ledger correctness | Self-transfer | invariant rejection | ✅ |
 | Ledger correctness | Negative/zero amount | invariant rejection | ✅ |
-| Time & date | Backdated payment date | needs explicit `actualPaymentDate` field | 🟡 |
-| Time & date | Multi-day events | schema extension `eventStartDate/endDate` | 🧭 |
+| Time & date | Backdated payment date | explicit `actualPaymentDate` field added in schema | ✅ |
+| Time & date | Multi-day events | schema fields `eventStartDate/endDate` plus custom duration UX | ✅ |
 | Identity | Dynamic email/phone login | single input decision path | ✅ |
 | Identity | Google login | backend provider path available | 🟡 |
 | Identity | Same user with multiple roles | supported by user-role model (with policy controls) | 🟡 |
 | Family lifecycle | deactivate family without data loss | `isActive` pattern + no-delete policy | ✅ |
-| Family lifecycle | split/merge family | needs dedicated models + transfer logic | 🧭 |
+| Family lifecycle | split/merge family | baseline split/merge model + service scaffold added | 🟡 |
 | Payment behavior | eventless support payment | nullable `eventId` | ✅ |
-| Payment behavior | overpayment goodwill credit | documented, implementation pending | 🟡 |
+| Payment behavior | overpayment goodwill credit | credit service + model scaffold added | 🟡 |
 | Notifications | retry on failure | status + retry count model | ✅ |
 | Notifications | no-phone family fallback | manual confirmation flow to be surfaced in UI | 🟡 |
 | Offline | duplicate entries | idempotency protection | ✅ |
@@ -196,3 +196,50 @@ flowchart TD
 - Scale readiness: **Roadmap identified; targeted engineering pending**
 
 **Overall:** GramFund now covers most real-world scenarios with explicit handling strategy and clear next-step gaps.
+
+
+---
+
+## 7) Trust & Transparency Model (Handler-Mediated Money)
+
+### 7.1 Responsibility Boundary
+- **GramFund = ledger + visibility + accountability**
+- **Handler = cash/UPI custody and delivery**
+
+This separation avoids custody/legal complexity while maximizing community trust through verifiable records.
+
+### 7.2 Fraud-Resistance Layers
+1. **Immediate confirmations**: payer/receiver confirmation events captured with channel metadata (`PUSH`, `SMS`, `MANUAL`).
+2. **Two-sided visibility**: both sides can validate amount/time/handler context through confirmation history.
+3. **Handler transparency ledger**: `totalCollected`, `totalDelivered`, `pendingAmount = collected - delivered`.
+4. **Risk signal**: non-zero pending automatically maps to `PENDING_SETTLEMENT`.
+5. **Dispute + audit trace**: immutable record chain for review and admin escalation.
+
+### 7.3 Trust Control Flow
+```mermaid
+flowchart TD
+  P[Payer Family] -->|gives cash/UPI| H[Handler]
+  H -->|records txn| API[GramFund API]
+  API --> C1[Create payer confirmation]
+  API --> C2[Create receiver confirmation]
+  API --> HL[Update handler collected/delivered ledger]
+  HL --> R{pending > 0 ?}
+  R -->|Yes| A[Risk signal: PENDING_SETTLEMENT]
+  R -->|No| OK[Risk signal: CLEAR]
+  API --> AUD[Audit + dispute traceability]
+```
+
+### 7.4 Implemented Endpoints
+- `POST /api/v1/payments/confirmations`
+- `GET /api/v1/payments/confirmations`
+- `POST /api/v1/handlers/:handlerId/ledger`
+- `GET /api/v1/handlers/:handlerId/transparency`
+
+These endpoints provide the minimal enforceable surface for “no silent transactions” and “visible mismatch risk.”
+
+---
+
+## 8) UI/UX Coverage Notes (Mobile-First Handler Workflow)
+- Handler payment form supports **custom duration in hours** (minimum 2h) instead of rigid presets.
+- Event start/end remains editable to reflect real-world partial-day and multi-day ceremonies.
+- Responsive CSS keeps primary experience optimized for phones with graceful expansion to tablet/laptop.

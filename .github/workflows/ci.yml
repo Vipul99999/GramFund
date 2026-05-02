@@ -38,6 +38,7 @@ jobs:
       - run: npx prisma migrate deploy
       - run: npm run check
       - run: npm test
+      - run: ../ops/backup-restore-drill.sh
 
   frontend:
     runs-on: ubuntu-latest
