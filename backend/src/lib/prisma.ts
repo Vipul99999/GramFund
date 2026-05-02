@@ -1,29 +1,11 @@
-type TxCallback<T> = (tx: PrismaLikeClient) => Promise<T>;
+import { PrismaClient } from '@prisma/client';
 
-type Row = Record<string, unknown>;
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-class MemoryTable {
-  rows: Row[] = [];
-  async create({ data }: { data: Row }) { this.rows.push(data); return data; }
-  async findUnique({ where }: { where: Row }) { return this.rows.find((r) => Object.entries(where).every(([k, v]) => r[k] === v)) ?? null; }
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
 }
 
-export interface PrismaLikeClient {
-  transaction: MemoryTable;
-  ledgerEntry: MemoryTable;
-  payment: MemoryTable;
-  syncReplay: MemoryTable;
-  user: MemoryTable;
-  passwordReset: MemoryTable;
-  $transaction<T>(cb: TxCallback<T>): Promise<T>;
-}
-
-export const prisma: PrismaLikeClient = {
-  transaction: new MemoryTable(),
-  ledgerEntry: new MemoryTable(),
-  payment: new MemoryTable(),
-  syncReplay: new MemoryTable(),
-  user: new MemoryTable(),
-  passwordReset: new MemoryTable(),
-  async $transaction<T>(cb: TxCallback<T>) { return cb(this); }
-};
+export type PrismaLikeClient = PrismaClient;

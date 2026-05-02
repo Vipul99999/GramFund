@@ -1,49 +1,40 @@
-# Backend Full Documentation
+# GramFund Backend Full Documentation
 
-## 1. Purpose
-This backend provides a ledger-first API surface for GramFund with strict correctness controls, explicit authorization, and async processing support.
+## 1) Purpose
+Provide a financially safe and operationally robust backend that supports online and offline-first payment workflows.
 
-## 2. Architectural Principles
-1. **Correctness first:** Financial invariants are enforced before state mutation.
-2. **Determinism:** Idempotency and predictable orchestration minimize retry risks.
-3. **Separation of concerns:** Transport, domain, and infrastructure are layered.
-4. **Observability readiness:** Metrics/ops routes and structured middleware hooks.
+## 2) Core Capabilities
+- OTP/session-based authentication
+- ABAC/RBAC enforced authorization
+- Payment orchestration to transaction + ledger entries
+- Async jobs via Redis/BullMQ workers
+- Operational endpoints for metrics and queue diagnostics
 
-## 3. Runtime Topology
-- Fastify API handles request-time workflows.
-- PostgreSQL stores canonical domain records.
-- Redis + BullMQ carry deferred/background work.
-- Worker service executes queued tasks independently.
+## 3) Domain Highlights
+- Payments are business events triggering financial postings.
+- Transactions represent movement intent and status.
+- Ledger entries are immutable debits/credits ensuring balance.
 
-## 4. Request Lifecycle
-1. Request enters middleware pipeline.
-2. Authentication and authorization context is resolved.
-3. Validation + invariant checks run before orchestration.
-4. Application service persists transactionally related entities.
-5. Optional async jobs are published for post-commit processing.
-6. Response is returned with normalized success/error format.
+## 4) Security
+- Identity established in auth middleware.
+- Permissions decided by role + policy checks.
+- Audit and fraud middleware extend compliance posture.
 
-## 5. Domain Model Responsibilities
-- **Payment:** Business-level payment intent and contextual metadata.
-- **Transaction:** Financial movement representation and status transitions.
-- **Ledger Entry:** Immutable debit/credit records enforcing balance.
-- **Settlement:** Downstream reconciliation/closure workflows.
+## 5) Data & Persistence
+- Prisma schema defines normalized entities and relationships.
+- Migration flow uses `prisma migrate deploy`.
+- Financial records should be treated append-only.
 
-## 6. Security & Policy
-- ABAC/RBAC logic controls route and operation access.
-- Middleware-oriented enforcement keeps policy centralized.
-- Audit/fraud hooks can be expanded for compliance workflows.
+## 6) Async & Reliability
+- Jobs use retry with backoff for transient failures.
+- Worker handlers should be idempotent and observable.
 
-## 7. Reliability Patterns
-- Idempotency key handling for duplicate request suppression.
-- Queue retries with exponential backoff for transient worker failures.
-- Conflict-aware sync contracts for eventually consistent clients.
+## 7) API & Contracts
+- Route manifest tracks exposed endpoints.
+- GraphQL operation map exists for future extension.
+- Job contracts define cross-process payload expectations.
 
-## 8. Operational Endpoints
-- Metrics and queue-diagnostic routes support runtime visibility.
-- Operational tooling should monitor queue depth, retries, and failures.
-
-## 9. Developer Workflow
+## 8) Developer Workflow
 ```bash
 cd backend
 npm install
@@ -51,14 +42,14 @@ npm run check
 npm test
 ```
 
-## 10. Production Readiness Checklist
-- [ ] Environment variables provisioned securely.
-- [ ] Prisma migrations deployed and verified.
-- [ ] Redis/queue and worker process healthy.
-- [ ] Error/metrics monitoring integrated.
-- [ ] Backup + incident runbooks documented.
+## 9) Production Readiness Checklist
+- [ ] Env vars configured (`DATABASE_URL`, `REDIS_URL`, auth secrets)
+- [ ] Prisma migrations applied
+- [ ] Queue + worker processes running
+- [ ] Health/metrics monitored
+- [ ] Backup and incident procedures documented
 
-## 11. Change Management Guidance
-- Any mutation flow touching money should update both tests and docs.
-- New endpoints should be reflected in API blueprint/route manifest.
-- Queue contract changes require coordinated API + worker updates.
+## 10) Extension Guidance
+- New financial use-cases must pass invariants and add regression tests.
+- Prefer adding module-local application services over bloating controllers.
+- Keep docs synchronized with endpoint and schema changes.
