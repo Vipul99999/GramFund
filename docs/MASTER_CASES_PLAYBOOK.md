@@ -180,9 +180,11 @@ flowchart TD
 
 ### Needs implementation to call "fully production complete"
 - Explicit schema fields for backdated `actualPaymentDate`, event date ranges
+- Family split/merge tables + business services
+- Overpayment credit accounting service
 - Reminder subsystem (pending commitments, unrecorded collection nudges)
-- Dedicated financial tables for lifecycle/credits beyond audit-log persistence
-- External monitoring stack dashboards (Grafana/Datadog) on top of ops metrics APIs
+- Backup automation + restore drills in CI/ops pipeline
+- Metrics dashboards + alerts
 
 ---
 

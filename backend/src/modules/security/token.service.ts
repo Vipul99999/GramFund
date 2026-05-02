@@ -1,16 +1,9 @@
 import crypto from 'node:crypto';
-import { env } from '../../config/env.js';
 
 const ACCESS_TTL_SECONDS = 60 * 15;
 const REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
 
-const getSecret = () => {
-  const secret = process.env.AUTH_TOKEN_SECRET;
-  if (env.NODE_ENV === 'production' && (!secret || secret === 'dev-only-change-me')) {
-    throw new Error('AUTH_TOKEN_SECRET is required in production');
-  }
-  return secret || 'dev-only-change-me';
-};
+const getSecret = () => process.env.AUTH_TOKEN_SECRET || 'dev-only-change-me';
 
 const b64 = (obj: unknown) => Buffer.from(JSON.stringify(obj)).toString('base64url');
 const sign = (data: string) => crypto.createHmac('sha256', getSecret()).update(data).digest('base64url');

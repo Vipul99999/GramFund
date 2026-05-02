@@ -1,5 +1,3 @@
-import { prisma } from '../../../lib/prisma.js';
-
 export interface OverpaymentCreditRecord {
   familyId: string;
   eventId?: string;
@@ -8,27 +6,17 @@ export interface OverpaymentCreditRecord {
   note?: string;
 }
 
-const ENTITY = 'OVERPAYMENT_CREDIT';
-
 export class OverpaymentCreditService {
-  async createCredit(record: OverpaymentCreditRecord) {
+  private readonly credits: OverpaymentCreditRecord[] = [];
+
+  createCredit(record: OverpaymentCreditRecord) {
     const normalized = { ...record, consumed: record.consumed ?? 0 };
-    await prisma.auditLog.create({
-      data: {
-        entity: ENTITY,
-        entityId: `${record.familyId}:${record.eventId ?? 'general'}:${Date.now()}`,
-        action: 'CREDIT_CREATE',
-        data: normalized,
-        createdAt: new Date()
-      } as any
-    });
+    this.credits.push(normalized);
     return normalized;
   }
 
-  async getAvailableCredit(familyId: string) {
-    const logs = await prisma.auditLog.findMany({ where: { entity: ENTITY } } as any);
-    return (logs as any[])
-      .map((l) => l.data as OverpaymentCreditRecord)
+  getAvailableCredit(familyId: string) {
+    return this.credits
       .filter((c) => c.familyId === familyId)
       .reduce((sum, c) => sum + (c.amount - (c.consumed ?? 0)), 0);
   }

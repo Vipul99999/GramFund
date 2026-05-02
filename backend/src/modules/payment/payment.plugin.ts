@@ -1,5 +1,4 @@
 import { FastifyPluginAsync } from 'fastify';
-import { routeNotification } from '../notification/notification-policy.service.js';
 
 const confirmations: Array<{
   id: string;
@@ -32,14 +31,6 @@ const plugin: FastifyPluginAsync = async (app) => {
       createdAt: new Date().toISOString()
     };
     confirmations.push(record);
-    await routeNotification({
-      userKey: body.transactionId,
-      villageId: 'global',
-      purpose: 'PAYMENT_CONFIRMATION',
-      message: `Confirmation ${body.side} for ${body.transactionId}`,
-      priority: body.side === 'PAYER' ? 'CRITICAL' : 'IMPORTANT',
-      channels: ['PUSH', 'SMS', 'MANUAL']
-    });
     return record;
   });
 

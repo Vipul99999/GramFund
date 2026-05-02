@@ -4,16 +4,16 @@ import { OverpaymentCreditService } from '../src/modules/payment/application/ove
 import { FamilySplitMergeService } from '../src/modules/family/application/family-split-merge.service.js';
 import { ReminderService } from '../src/modules/payment/application/reminder.service.js';
 
-test('overpayment credit tracks available balance', async () => {
+test('overpayment credit tracks available balance', () => {
   const svc = new OverpaymentCreditService();
-  await svc.createCredit({ familyId: 'f1', amount: 150, consumed: 40 });
-  assert.equal(await svc.getAvailableCredit('f1'), 110);
+  svc.createCredit({ familyId: 'f1', amount: 150, consumed: 40 });
+  assert.equal(svc.getAvailableCredit('f1'), 110);
 });
 
-test('family split merge record can be queried by family', async () => {
+test('family split merge record can be queried by family', () => {
   const svc = new FamilySplitMergeService();
-  await svc.record({ sourceFamilyId: 'f1', targetFamilyId: 'f2', operation: 'SPLIT' });
-  assert.equal((await svc.listByFamily('f1')).length, 1);
+  svc.record({ sourceFamilyId: 'f1', targetFamilyId: 'f2', operation: 'SPLIT' });
+  assert.equal(svc.listByFamily('f1').length, 1);
 });
 
 test('reminder service lists due tasks', () => {
