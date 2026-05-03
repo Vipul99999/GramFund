@@ -77,7 +77,6 @@ Use `.env.example` as baseline:
 - `REDIS_URL`
 - `PORT`
 - `NEXT_PUBLIC_API_BASE_URL`
-- `USE_REAL_DB` (`true` required in production)
 
 ## Quality Gates
 - Backend: `npm run check` + `npm test`
@@ -89,8 +88,3 @@ Use `.env.example` as baseline:
 
 ## License
 MIT — see `LICENSE`.
-
-
-## Monitoring Stack
-- Start Prometheus + Grafana: `docker compose -f docker-compose.monitoring.yml up -d`
-- Backend exports Prometheus metrics at `/api/v1/ops/metrics/prometheus`.

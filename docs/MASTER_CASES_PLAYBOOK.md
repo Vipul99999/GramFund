@@ -59,9 +59,6 @@ flowchart TD
 | Notifications | no-phone family fallback | manual confirmation flow to be surfaced in UI | 🟡 |
 | Offline | duplicate entries | idempotency protection | ✅ |
 | Offline | sync conflict | server-wins duplicate resolution | ✅ |
-| Settlement | partial delivery + pending tracking | dedicated settlement flow with pending/delayed summary | ✅ |
-| Settlement | receiver confirmation (yes/no) | confirmation endpoint with dispute state | ✅ |
-| Settlement | delayed settlement SLA | 48-hour breach flag + metric increment | ✅ |
 | Offline | device lost pre-sync | UX warning + auto-sync strategy pending | 🟡 |
 | Compliance | KYC/Sanctions/Cases | compliance routes scaffolded | ✅ |
 | Security | session/token rotation | signed token pair + refresh rotate | ✅ |
@@ -183,9 +180,11 @@ flowchart TD
 
 ### Needs implementation to call "fully production complete"
 - Explicit schema fields for backdated `actualPaymentDate`, event date ranges
-- Dedicated Grafana dashboard panels and alert tuning thresholds per environment
-- Full restore-to-clean-database verification (data round-trip, not schema-only)
-- Datadog/Otel integration if moving beyond Prometheus/Grafana stack
+- Family split/merge tables + business services
+- Overpayment credit accounting service
+- Reminder subsystem (pending commitments, unrecorded collection nudges)
+- Backup automation + restore drills in CI/ops pipeline
+- Metrics dashboards + alerts
 
 ---
 

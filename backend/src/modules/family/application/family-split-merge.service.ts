@@ -1,5 +1,3 @@
-import { prisma } from '../../../lib/prisma.js';
-
 export type FamilyLifecycleOperation = 'SPLIT' | 'MERGE';
 
 export interface FamilySplitMergeRecord {
@@ -11,29 +9,15 @@ export interface FamilySplitMergeRecord {
 }
 
 export class FamilySplitMergeService {
-  async record(input: Omit<FamilySplitMergeRecord, 'createdAt'>) {
+  private readonly records: FamilySplitMergeRecord[] = [];
+
+  record(input: Omit<FamilySplitMergeRecord, 'createdAt'>) {
     const rec: FamilySplitMergeRecord = { ...input, createdAt: new Date() };
-    await prisma.familySplitMerge.create({
-      data: {
-        sourceFamilyId: input.sourceFamilyId,
-        targetFamilyId: input.targetFamilyId,
-        reason: `${input.operation}:${input.reason ?? ''}`,
-        createdAt: rec.createdAt
-      } as any
-    });
+    this.records.push(rec);
     return rec;
   }
 
-  async listByFamily(familyId: string) {
-    const rows = await prisma.familySplitMerge.findMany();
-    return (rows as any[])
-      .filter((r) => r.sourceFamilyId === familyId || r.targetFamilyId === familyId)
-      .map((r) => ({
-        sourceFamilyId: r.sourceFamilyId,
-        targetFamilyId: r.targetFamilyId,
-        operation: String(r.reason ?? '').startsWith('MERGE:') ? 'MERGE' : 'SPLIT',
-        reason: String(r.reason ?? '').split(':').slice(1).join(':') || undefined,
-        createdAt: new Date(r.createdAt)
-      } as FamilySplitMergeRecord));
+  listByFamily(familyId: string) {
+    return this.records.filter((r) => r.sourceFamilyId === familyId || r.targetFamilyId === familyId);
   }
 }
