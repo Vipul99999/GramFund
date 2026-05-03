@@ -1,0 +1,31 @@
+name: Ops Restore Drill
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gramfund
+          POSTGRES_PASSWORD: gramfund
+          POSTGRES_DB: gramfund
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U gramfund -d gramfund"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgresql://gramfund:gramfund@localhost:5432/gramfund
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Postgres client tools
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Execute backup/restore drill
+        run: bash ops/backup-restore-drill.sh
