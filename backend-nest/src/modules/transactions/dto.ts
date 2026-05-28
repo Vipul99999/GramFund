@@ -1,10 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString, IsUUID, MaxLength, Min, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class WitnessDto {
-  @IsString() @MaxLength(120) name!: string;
-  @IsOptional() @IsString() phone?: string;
-}
+import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateTransactionDto {
   @IsUUID() familyId!: string;
@@ -12,6 +6,4 @@ export class CreateTransactionDto {
   @IsOptional() @IsUUID() eventId?: string;
   @IsNumber() @Min(1) amount!: number;
   @IsString() idempotencyKey!: string;
-  @IsOptional() @IsString() note?: string;
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => WitnessDto) witnesses?: WitnessDto[];
 }

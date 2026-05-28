@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SyncService } from './sync.service';
 
@@ -7,5 +7,4 @@ import { SyncService } from './sync.service';
 export class SyncController {
   constructor(private readonly service: SyncService) {}
   @Post('replay') replay(@Body() body: { deviceId: string; events: any[] }) { return this.service.replay(body.deviceId, body.events); }
-  @Get('report/:deviceId') report(@Param('deviceId') deviceId: string) { return this.service.report(deviceId); }
 }

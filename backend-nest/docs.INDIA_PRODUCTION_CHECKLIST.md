@@ -1,20 +1,22 @@
 # India Real-World Production Checklist
 
-## Implemented now
-- Governance SLA automation endpoint: post-cutoff missing cash close triggers risk downgrade + fraud alert.
-- Variance-threshold escalations: high variance creates critical fraud alerts + freezes high-value actions via lower daily limits.
-- Ledger period lock semantics enforced in transaction writes (closed month blocks new transactions).
-- Identity-based legal acceptance guard with route-level legal binding + audit logging.
-- Notification provider adapter architecture + webhook signature validation + retry worker primitive.
-- Projector checkpoint + idempotency logs for incremental read-model projection.
-- Receipt storage pipeline with signed URLs and retention metadata.
-- Security policy check script integrated in CI.
-- India field operations pack: localized IVR scripts, print-first workflows, operator onboarding program.
-- Secret rotation runbook documented.
+## Implemented in this revision
+- Hindi + English message support on auth and service error messaging basis (`x-lang`: `en|hi`).
+- Witness-capable transactions.
+- Handler risk guardrail via daily exposure limit enforcement.
+- Financial event stream table for event-sourced audit timeline.
+- Cash closing model for daily reconciliation.
+- Evidence attachment model for UPI slips, receipts, and proof artifacts.
+- Relationship ledger model for reciprocity intelligence.
+- Legal disclaimer acceptance model for compliance boundary acknowledgement.
 
-## Remaining rollout tasks
-1. Plug production SDK credentials (FCM, MSG91, WhatsApp BSP, Exotel/Knowlarity) and callback endpoints.
-2. Replace stub object storage adapter with S3/R2/MinIO signed URL implementation.
-3. Move SLA/projector/retry endpoints into scheduled BullMQ jobs.
-4. Add automated retention deletion worker for evidence artifacts.
-5. Integrate Vault/KMS APIs for dynamic key fetch and rotation event ingestion.
+## Next must-build before national scale
+1. Receipt pipeline: PDF + thermal + WhatsApp share + QR verify.
+2. Multi-party approvals on high-value thresholds.
+3. Assisted account workflows for non-smartphone families.
+4. Offline sync queue endpoints and deterministic conflict resolution.
+5. Notification fallback chain: Push -> SMS -> WhatsApp -> IVR.
+6. Geo-audit and suspicious pattern rules.
+7. Period close and ledger lock flows.
+8. Succession workflows (family head/handler death transfer).
+9. State-specific legal reviews and product constraints.
