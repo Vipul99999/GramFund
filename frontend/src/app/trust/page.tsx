@@ -1,0 +1,1 @@
+export default function Page(){return <main className="mx-auto max-w-4xl p-4"><h1 className="mb-3 text-2xl font-bold">trust</h1><p className="text-slate-700">GramFund provides transparent, record-only community finance operations with auditable logs, security controls, and operator-grade workflows.</p></main>}

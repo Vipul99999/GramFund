@@ -1,0 +1,45 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum UserRole { ADMIN COMMUNITY_ADMIN HANDLER FAMILY }
+enum LedgerDirection { DEBIT CREDIT }
+enum NotificationPriority { LOW IMPORTANT CRITICAL }
+enum TransactionStatus { POSTED REVERSED }
+
+model User { id String @id @default(uuid()) email String? @unique phone String? @unique passwordHash String? name String role UserRole preferredLanguage String @default("en") isActive Boolean @default(true) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt sessions Session[] auditLogs AuditLog[] }
+model Session { id String @id @default(uuid()) userId String refreshToken String @unique expiresAt DateTime revokedAt DateTime? createdAt DateTime @default(now()) user User @relation(fields:[userId], references:[id]) }
+model Village { id String @id @default(uuid()) name String pincode String district String state String latitude Decimal? @db.Decimal(10,7) longitude Decimal? @db.Decimal(10,7) isActive Boolean @default(true) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt families Family[] handlers HandlerVillage[] @@unique([name,pincode,district,state]) }
+model Handler { id String @id @default(uuid()) userId String @unique trustScore Int @default(50) commissionBps Int @default(0) dailyLimitAmount Decimal @default(5000) @db.Decimal(18,2) riskLevel String @default("LOW") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt villages HandlerVillage[] }
+model HandlerVillage { id String @id @default(uuid()) handlerId String villageId String createdAt DateTime @default(now()) handler Handler @relation(fields:[handlerId], references:[id]) village Village @relation(fields:[villageId], references:[id]) @@unique([handlerId,villageId]) }
+model Family { id String @id @default(uuid()) name String villageId String isActive Boolean @default(true) successorId String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt village Village @relation(fields:[villageId], references:[id]) profile FamilyProfile? ledger FamilyLedger? }
+model FamilyProfile { id String @id @default(uuid()) familyId String @unique headName String? phone String? photoUrl String? notes String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt family Family @relation(fields:[familyId], references:[id]) }
+model Event { id String @id @default(uuid()) villageId String title String startDate DateTime endDate DateTime? expectedContribution Decimal? @db.Decimal(18,2) status String createdAt DateTime @default(now()) }
+model Transaction { id String @id @default(uuid()) familyId String handlerId String eventId String? amount Decimal @db.Decimal(18,2) idempotencyKey String @unique createdByUserId String status TransactionStatus @default(POSTED) note String? riskSnapshot Json? createdAt DateTime @default(now()) ledgerEntries LedgerEntry[] witnesses TransactionWitness[] }
+model TransactionWitness { id String @id @default(uuid()) transactionId String witnessName String witnessPhone String? confirmedAt DateTime? transaction Transaction @relation(fields:[transactionId], references:[id]) }
+model LedgerEntry { id String @id @default(uuid()) transactionId String familyId String direction LedgerDirection amount Decimal @db.Decimal(18,2) createdAt DateTime @default(now()) transaction Transaction @relation(fields:[transactionId], references:[id]) @@index([familyId,createdAt]) }
+model FamilyLedger { familyId String @id totalGiven Decimal @default(0) @db.Decimal(18,2) totalReceived Decimal @default(0) @db.Decimal(18,2) netBalance Decimal @default(0) @db.Decimal(18,2) updatedAt DateTime @updatedAt }
+model Settlement { id String @id @default(uuid()) handlerId String receiverName String collectedAmount Decimal @db.Decimal(18,2) deliveredAmount Decimal @default(0) @db.Decimal(18,2) pendingAmount Decimal @db.Decimal(18,2) confirmedBy String? confirmedAt DateTime? createdAt DateTime @default(now()) }
+model CashClosing { id String @id @default(uuid()) handlerId String closingDate DateTime openingBalance Decimal @db.Decimal(18,2) totalCollections Decimal @db.Decimal(18,2) totalSettlements Decimal @db.Decimal(18,2) totalRefunds Decimal @default(0) @db.Decimal(18,2) expectedCash Decimal @db.Decimal(18,2) actualCash Decimal @db.Decimal(18,2) variance Decimal @db.Decimal(18,2) adminApprovedBy String? adminApprovedAt DateTime? createdAt DateTime @default(now()) @@unique([handlerId, closingDate]) }
+model EvidenceAttachment { id String @id @default(uuid()) entityType String entityId String storageKey String mimeType String uploadedBy String retentionUntil DateTime? deletedAt DateTime? createdAt DateTime @default(now()) }
+model Notification { id String @id @default(uuid()) userId String title String body String priority NotificationPriority createdAt DateTime @default(now()) }
+model Dispute { id String @id @default(uuid()) transactionId String? familyId String reason String status String createdAt DateTime @default(now()) }
+model FraudAlert { id String @id @default(uuid()) type String severity String subjectType String subjectId String message String createdAt DateTime @default(now()) }
+model RelationshipLedger { id String @id @default(uuid()) fromFamilyId String toFamilyId String eventType String amount Decimal @db.Decimal(18,2) eventDate DateTime transactionId String? createdAt DateTime @default(now()) @@index([fromFamilyId,toFamilyId]) }
+model FinancialEvent { id String @id @default(uuid()) aggregateType String aggregateId String eventType String payload Json sequenceNo Int @default(1) eventAt DateTime @default(now()) @@index([aggregateType, aggregateId, sequenceNo]) }
+model LegalDisclaimerAcceptance { id String @id @default(uuid()) userId String module String version String acceptedAt DateTime @default(now()) }
+model AuditLog { id String @id @default(uuid()) actorUserId String action String entityType String entityId String metadata Json? createdAt DateTime @default(now()) actor User @relation(fields:[actorUserId], references:[id]) }
+model MultiPartyApproval { id String @id @default(uuid()) transactionId String @unique thresholdAmount Decimal @db.Decimal(18,2) status String adminApprovedAt DateTime? receiverApprovedAt DateTime? witnessApprovedCount Int @default(0) createdAt DateTime @default(now()) }
+model AssistedAccount { id String @id @default(uuid()) familyId String @unique operatorUserId String contactPhone String? mode String createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model SyncEvent { id String @id @default(uuid()) eventId String @unique deviceId String aggregateType String aggregateId String eventType String payload Json occurredAt DateTime createdAt DateTime @default(now()) }
+model NotificationDelivery { id String @id @default(uuid()) userId String title String body String channel String status String attemptCount Int @default(0) nextRetryAt DateTime? lastAttemptAt DateTime? deadLetteredAt DateTime? providerMessageId String? createdAt DateTime @default(now()) }
+model LedgerPeriod { id String @id @default(uuid()) periodKey String @unique status String closedBy String? closedAt DateTime? createdAt DateTime @default(now()) }
+model SuccessionWorkflow { id String @id @default(uuid()) entityType String entityId String successorId String approvedBy String status String createdAt DateTime @default(now()) }
+model ApprovalPolicy { id String @id @default(uuid()) villageId String? eventType String? thresholdAmount Decimal @db.Decimal(18,2) minWitnessCount Int @default(0) isActive Boolean @default(true) createdAt DateTime @default(now()) }
+model SyncConflict { id String @id @default(uuid()) deviceId String eventId String reason String createdAt DateTime @default(now()) }
+model FamilyStatementReadModel { familyId String @id totalGiven Decimal @default(0) @db.Decimal(18,2) totalReceived Decimal @default(0) @db.Decimal(18,2) netBalance Decimal @default(0) @db.Decimal(18,2) updatedAt DateTime @updatedAt }
+model HandlerExposureReadModel { handlerId String @id totalCollected Decimal @default(0) @db.Decimal(18,2) pendingSettlement Decimal @default(0) @db.Decimal(18,2) updatedAt DateTime @updatedAt }
+model VillageTrustReadModel { villageId String @id trustScore Int @default(50) disputeRate Decimal @default(0) @db.Decimal(10,4) settlementDelayHours Int @default(0) updatedAt DateTime @updatedAt }
+model SecretRotationAudit { id String @id @default(uuid()) keyName String rotatedBy String rotatedAt DateTime @default(now()) version String }
+model ProjectorCheckpoint { projectorName String @id lastEventAt DateTime? lastSequence Int @default(0) updatedAt DateTime @updatedAt }
+model ProjectionLog { id String @id @default(uuid()) projectorName String idempotencyToken String @unique aggregateType String aggregateId String createdAt DateTime @default(now()) }
+model ReceiptArtifact { id String @id @default(uuid()) transactionId String @unique storageKey String signedUrl String expiresAt DateTime retentionUntil DateTime createdAt DateTime @default(now()) }
