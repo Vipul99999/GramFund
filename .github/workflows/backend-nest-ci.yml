@@ -1,0 +1,26 @@
+name: backend-nest-ci
+on:
+  push:
+    paths:
+      - 'backend-nest/**'
+      - '.github/workflows/backend-nest-ci.yml'
+  pull_request:
+    paths:
+      - 'backend-nest/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-nest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend-nest/package.json
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
