@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
-import { I18nService } from './i18n/i18n.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { VillagesModule } from './modules/villages/villages.module';
 import { FamiliesModule } from './modules/families/families.module';
@@ -13,8 +12,18 @@ import { FraudModule } from './modules/fraud/fraud.module';
 import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, VillagesModule, FamiliesModule, HandlersModule, EventsModule, TransactionsModule, SettlementsModule, FraudModule, AuditModule],
-  providers: [I18nService],
-  exports: [I18nService]
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    VillagesModule,
+    FamiliesModule,
+    HandlersModule,
+    EventsModule,
+    TransactionsModule,
+    SettlementsModule,
+    FraudModule,
+    AuditModule
+  ]
 })
 export class AppModule {}
