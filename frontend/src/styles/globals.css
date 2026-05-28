@@ -1,23 +1,4 @@
-* { box-sizing: border-box; }
-body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 1rem; background: #f8fafc; }
-main { max-width: 1200px; margin: 0 auto; }
-input, button { display: block; margin-bottom: 10px; width: 100%; max-width: 420px; padding: 10px; }
-@media (min-width: 768px) { body { padding: 1.5rem; } }
-@media (min-width: 1280px) { main { max-width: 1440px; } }
+@import "tailwindcss";
 
-.card{background:#fff;box-shadow:0 6px 18px rgba(15,23,42,.06)}
-.grid-two{display:grid;grid-template-columns:1fr;gap:10px}
-@media(min-width:768px){.grid-two{grid-template-columns:1fr 1fr}}
-label{display:block;font-size:.92rem;color:#334155;margin-bottom:8px}
-.status-badge{display:inline-block;padding:6px 10px;border-radius:999px;margin-bottom:10px}
-.status-badge.good{background:#dcfce7;color:#166534}.status-badge.fair{background:#fef9c3;color:#854d0e}.status-badge.poor{background:#fee2e2;color:#991b1b}
-.pill{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}.pill.active{background:#0f172a;color:#fff;border-color:#0f172a}
-.duration-box{display:grid;grid-template-columns:1fr;gap:8px;margin:8px 0 14px}
-
-@media(min-width:1024px){input,button{max-width:560px}}
-
-.stats-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
-.mini-stat{border:1px solid #e2e8f0;border-radius:10px;padding:10px;background:#fff}.mini-stat p{margin:0;color:#64748b;font-size:.85rem}.mini-stat strong{font-size:1.1rem}.mini-stat.good{background:#f0fdf4}.mini-stat.fair{background:#fffbeb}
-.quick-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}.quick-link{display:inline-block;border:1px solid #cbd5e1;padding:10px 12px;border-radius:10px;text-decoration:none;color:#0f172a;background:#fff}
-.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-@media(min-width:768px){.stats-grid{grid-template-columns:repeat(3,1fr)}.quick-actions{grid-template-columns:repeat(3,1fr)}}
+:root { color-scheme: light; }
+body { margin: 0; }

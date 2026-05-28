@@ -12,10 +12,14 @@
     "next": "15.5.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "zustand": "5.0.8"
+    "zustand": "5.0.8",
+    "dompurify": "^3.2.6",
+    "isomorphic-dompurify": "^2.26.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "tailwindcss": "^4.1.12",
+    "@tailwindcss/postcss": "^4.1.12"
   }
 }
