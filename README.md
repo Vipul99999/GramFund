@@ -88,3 +88,8 @@ Use `.env.example` as baseline:
 
 ## License
 MIT — see `LICENSE`.
+
+
+## NestJS Migration Workspace
+
+A production-oriented NestJS + Fastify migration workspace now lives in `backend-nest/`.
