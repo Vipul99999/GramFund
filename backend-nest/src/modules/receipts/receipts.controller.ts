@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ReceiptsService } from './receipts.service';
 
@@ -8,6 +8,4 @@ export class ReceiptsController {
   constructor(private readonly service: ReceiptsService) {}
   @Get(':transactionId')
   generate(@Param('transactionId') transactionId: string) { return this.service.generate(transactionId); }
-  @Get('verify/:transactionId')
-  verify(@Param('transactionId') transactionId: string, @Query('sig') sig: string) { return this.service.verify(transactionId, sig); }
 }
